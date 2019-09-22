@@ -1,52 +1,51 @@
 package su.nepom.spring1.model;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import javax.transaction.Transactional;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Repository
 public class UserDAOImpl implements UserDAO {
-    private static AtomicInteger nextId = new AtomicInteger();
-    private final List<User> users = new ArrayList<>();
+    @Autowired
+    private SessionFactory sessionFactory;
 
-    {
-        add(new User(0, "Evgeniy"));
-        add(new User(0, "Elena"));
-    }
 
     @Override
+    @Transactional
     public List<User> allUsers() {
-        return Collections.unmodifiableList(users);
+        var s = sessionFactory.getCurrentSession();
+        return s.createQuery("from User").list();
     }
 
     @Override
+    @Transactional
     public void add(User user) {
-        user.setId(nextId.getAndIncrement());
-        users.add(user);
+        var s = sessionFactory.getCurrentSession();
+        s.persist(user);
     }
 
     @Override
-    public void delete(User user) {
-        users.removeIf(u -> u.getId() == user.getId());
+    @Transactional
+    public void delete(int id) {
+        var s = sessionFactory.getCurrentSession();
+        var q = s.createQuery("delete " + User.class.getName() + " where id = :id").setParameter("id", id);
+        q.executeUpdate();
     }
 
     @Override
+    @Transactional
     public void update(User user) {
-        for (int i = 0, alast = users.size(); i < alast; ++i)
-            if (users.get(i).getId() == user.getId()) {
-                users.set(i, user);
-                break;
-            }
+        var s = sessionFactory.getCurrentSession();
+        s.update(user);
     }
 
     @Override
+    @Transactional
     public User getById(int id) {
-        for (var u : users)
-            if (u.getId() == id)
-                return u;
-        return null;
+        var s = sessionFactory.getCurrentSession();
+        return s.get(User.class, id);
     }
 }

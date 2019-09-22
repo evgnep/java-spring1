@@ -52,4 +52,12 @@ public class UserController {
         users.add(user);
         return mv;
     }
+
+    @GetMapping(value = "/delete/{id}")
+    public ModelAndView delete(@PathVariable int id) {
+        users.delete(id);
+        var mv = new ModelAndView();
+        mv.setViewName("redirect:/");
+        return mv;
+    }
 }
